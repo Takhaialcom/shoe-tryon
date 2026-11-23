@@ -1,0 +1,14 @@
+{
+  "shoes": [
+    { "id": "runner-x1", "name": "Runner X1", "model": "models/runner-x1.glb", "thumbnail": "",
+      "referenceLengthCm": 28.5, "anchorOffset": [0, 0, 0.02], "rotationOffsetDeg": [0, 0, 0],
+      "scaleMultiplier": 1.0, "mirrorLeft": true,
+      "occluder": { "radius": 0.045, "offset": [0, 0.07, 0.05], "length": 0.35 },
+      "color": "#e8402a" },
+    { "id": "court-2", "name": "Court 2", "model": "models/court-2.glb", "thumbnail": "",
+      "referenceLengthCm": 27.0, "anchorOffset": [0, 0, 0.02], "rotationOffsetDeg": [0, 0, 0],
+      "scaleMultiplier": 1.0, "mirrorLeft": true,
+      "occluder": { "radius": 0.045, "offset": [0, 0.07, 0.05], "length": 0.35 },
+      "color": "#2a6be8" }
+  ]
+}
