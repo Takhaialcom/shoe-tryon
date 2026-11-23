@@ -7,7 +7,7 @@ import { ShoeRenderer } from './ShoeRenderer.js';
 import { ModelCatalog } from './ModelCatalog.js';
 import { UI } from './UI.js';
 
-const CFG = { zWeight: 0.5, minConfidence: 0.5, lostFrames: 8, facing: 'environment' };
+const CFG = { zWeight: 0.5, minConfidence: 0.25, lostFrames: 8, facing: 'environment' };
 
 const video = document.getElementById('video'), stage = document.getElementById('stage');
 const cam = new CameraSource(video), tracker = new FootTracker(), renderer = new ShoeRenderer(document.getElementById('gl'));
@@ -40,11 +40,26 @@ function snapshot() {
 }
 
 let last = performance.now();
+
+const DEBUG = new URLSearchParams(location.search).has('debug');
+let dbg;
+if (DEBUG) { dbg = document.createElement('canvas'); dbg.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none'; stage.appendChild(dbg); }
+function drawDebug(lms) {
+  dbg.width = size.w; dbg.height = size.h;
+  if (!lms) { ui.status('No person detected: show hips to feet'); return; }
+  const x = dbg.getContext('2d'), v = i => (lms[i].visibility ?? 1).toFixed(2);
+  for (const i of [25, 26, 27, 28, 29, 30, 31, 32]) {
+    x.fillStyle = (lms[i].visibility ?? 1) > 0.5 ? '#0f0' : '#f80';
+    x.beginPath(); x.arc(lms[i].x * size.w, lms[i].y * size.h, 6, 0, 7); x.fill();
+  }
+  ui.status(`L ${v(27)}/${v(29)}/${v(31)}  R ${v(28)}/${v(30)}/${v(32)}`);
+}
 function loop(now) {
   requestAnimationFrame(loop);
   const dt = (now - last) / 1000; last = now;
   const lms = item ? tracker.detect(video, now) : undefined;
   if (lms !== undefined) {
+    if (DEBUG) drawDebug(lms);    
     for (const side of ['left', 'right']) {
       const pose = lms && solveFoot(lms, side, size.w, size.h, { refLengthM: item.referenceLengthCm / 100, zWeight: CFG.zWeight });
       if (pose && pose.confidence > CFG.minConfidence) {
