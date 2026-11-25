@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <meta name="theme-color" content="#0E1114" />
+  <title>Shoe try-on</title>
+  <style>
+    :root {
+      --ink: #0E1114; --panel: rgba(14,17,20,.74); --line: rgba(242,240,234,.16);
+      --text: #F2F0EA; --muted: #A3ABB3; --accent: #5B7CFF;
+      --safe-t: env(safe-area-inset-top, 0px); --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; height: 100%; background: var(--ink); color: var(--text);
+      font: 500 15px/1.35 system-ui, -apple-system, "Segoe UI Variable", Roboto, sans-serif; overflow: hidden; }
+    #stage { position: fixed; inset: 0; height: 100dvh; }
+    #stage.mock { background:
+      linear-gradient(180deg, #1b2229 0%, #2c353d 55%, #3a444c 100%); }
+    #video, #gl, #kp { position: absolute; inset: 0; width: 100%; height: 100%; }
+    #video { object-fit: cover; background: transparent; }
+    #gl, #kp { pointer-events: none; }
+
+    .glass { background: var(--panel); border: 1px solid var(--line); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+    #status { position: fixed; top: calc(var(--safe-t) + 10px); left: 10px; padding: 6px 10px; border-radius: 10px; font-size: 12px; color: var(--muted); }
+    #debugBtn { position: fixed; top: calc(var(--safe-t) + 10px); right: 10px; padding: 7px 12px; border-radius: 10px; color: var(--text); font: inherit; font-size: 13px; }
+
+    #debug { position: fixed; top: calc(var(--safe-t) + 52px); right: 10px; width: min(300px, calc(100vw - 20px));
+      padding: 12px; border-radius: 14px; display: none; gap: 10px; flex-direction: column; font-size: 13px; }
+    #debug.open { display: flex; }
+    #debug label { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); }
+    #debug input[type=range] { width: 150px; accent-color: var(--accent); }
+    #debug .row { display: flex; justify-content: space-between; color: var(--muted); }
+    #debug .row b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+    #debug input[type=checkbox] { accent-color: var(--accent); width: 18px; height: 18px; }
+
+    #carousel { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 12px calc(var(--safe-b) + 14px);
+      display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; }
+    #carousel::-webkit-scrollbar { display: none; }
+    .chip { flex: 0 0 auto; scroll-snap-align: center; min-width: 132px; padding: 10px 14px; border-radius: 14px; color: var(--text);
+      font: inherit; text-align: left; cursor: pointer; }
+    .chip small { display: block; color: var(--muted); font-size: 12px; }
+    .chip[aria-pressed=true] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+
+    #gate { position: fixed; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 14px;
+      padding: 24px 20px calc(var(--safe-b) + 28px); background: linear-gradient(180deg, rgba(14,17,20,.55), var(--ink) 70%); z-index: 5; }
+    #gate h1 { margin: 0; font-size: 30px; line-height: 1.1; font-weight: 700; letter-spacing: -.01em; max-width: 14ch; }
+    #gate p { margin: 0; color: var(--muted); max-width: 34ch; }
+    .btn { padding: 14px 18px; border-radius: 14px; border: 0; font: inherit; font-weight: 650; cursor: pointer; }
+    .btn.primary { background: var(--accent); color: #fff; }
+    .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+    #gate.hidden { display: none; }
+    #msg { color: #ff9a8b; min-height: 1.2em; font-size: 13px; }
+    button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  </style>
+  <script type="module" crossorigin src="./assets/index-BayyRIaE.js"></script>
+</head>
+<body>
+  <div id="stage">
+    <video id="video" playsinline muted autoplay></video>
+    <canvas id="gl"></canvas>
+    <canvas id="kp"></canvas>
+  </div>
+
+  <div id="status" class="glass">Not started</div>
+  <button id="debugBtn" class="glass" aria-expanded="false" aria-controls="debug">Debug</button>
+
+  <section id="debug" class="glass" aria-label="Debug">
+    <div class="row"><span>FPS</span><b id="fps">–</b></div>
+    <div class="row"><span>Inference</span><b id="inf">–</b></div>
+    <div class="row"><span>Provider</span><b id="ep">–</b></div>
+    <div class="row"><span>Detected classes</span><b id="cls">–</b></div>
+    <label>Camera tilt <b id="tiltVal">55°</b><input id="tilt" type="range" min="30" max="75" step="1" value="55" /></label>
+    <label>Field of view <b id="fovVal">60°</b><input id="fov" type="range" min="40" max="90" step="1" value="60" /></label>
+    <label>Demo mode <input id="mock" type="checkbox" /></label>
+    <label>Show keypoints <input id="kpToggle" type="checkbox" checked /></label>
+    <label>Show leg occluder <input id="occ" type="checkbox" /></label>
+    <label>Swap left / right shoe <input id="swap" type="checkbox" /></label>
+  </section>
+
+  <nav id="carousel" class="glass" aria-label="Shoes"></nav>
+
+  <section id="gate">
+    <h1>Try shoes on your feet</h1>
+    <p>Hold your phone at chest height, camera pointing down at your feet, tilted about 45–60°.</p>
+    <div id="msg" role="status"></div>
+    <button id="startCam" class="btn primary">Start camera</button>
+    <button id="startMock" class="btn ghost">Try demo mode</button>
+  </section>
+
+</body>
+</html>
