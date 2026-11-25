@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <title>3D Virtual Shoe Try-On</title>
+  <script type="module" crossorigin src="/assets/index-C1FrxIzu.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DtSwnXJ1.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Live camera -->
+    <video id="camera" playsinline muted autoplay></video>
+
+    <!-- Three.js canvas mounts here -->
+    <div id="three-root"></div>
+
+    <!-- Top HUD -->
+    <div id="hud-top">
+      <button id="btn-debug" class="pill">Debug</button>
+      <button id="btn-mock" class="pill">Mock: OFF</button>
+    </div>
+
+    <!-- Debug overlay -->
+    <div id="debug-overlay" class="hidden">
+      <div class="row"><span>FPS</span><span id="dbg-fps">–</span></div>
+      <div class="row"><span>Detections</span><span id="dbg-det">–</span></div>
+      <div class="row tilt">
+        <label for="tilt-slider">Cam Tilt</label>
+        <input id="tilt-slider" type="range" min="-60" max="-30" value="-50" step="1" />
+        <span id="dbg-tilt">-50°</span>
+      </div>
+      <pre id="dbg-landmarks"></pre>
+    </div>
+
+    <!-- Bottom shoe carousel -->
+    <div id="shoe-carousel">
+      <button class="shoe-chip active" data-shoe="default">Default</button>
+      <button class="shoe-chip" data-shoe="hightop">High-Top</button>
+      <button class="shoe-chip" data-shoe="runner">Runner</button>
+    </div>
+  </div>
+</body>
+</html>
